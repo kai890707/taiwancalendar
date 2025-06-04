@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <script>
+
+        const WEEK_MAP = {
+        "一": { en: "Monday", abbr: "Mon" },
+        "二": { en: "Tuesday", abbr: "Tue" },
+        "三": { en: "Wednesday", abbr: "Wed" },
+        "四": { en: "Thursday", abbr: "Thu" },
+        "五": { en: "Friday", abbr: "Fri" },
+        "六": { en: "Saturday", abbr: "Sat" },
+        "日": { en: "Sunday", abbr: "Sun" },
+        };
+        const MONTH_EN = [
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+        ];
+        const MONTH_EN_ABBR = [
+        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+        ];
+
+        // 2. 主要轉換函式
+        function transformEduHolidayArray(arr) {
+        return arr.map(row => {
+            const d = row["西元日期"];
+            const year = d.slice(0, 4);
+            const month = d.slice(4, 6);
+            const day = d.slice(6, 8);
+            const monNum = parseInt(month, 10) - 1;
+            const roc_year = (parseInt(year, 10) - 1911).toString();
+
+            const week_ch = row["星期"];
+            const weekObj = WEEK_MAP[week_ch] || { en: "", abbr: "" };
+
+            return {
+            date: d,
+            date_format: `${year}/${month}/${day}`,
+            year: year,
+            roc_year: roc_year,
+            month: month,
+            month_en: MONTH_EN[monNum],
+            month_en_abbr: MONTH_EN_ABBR[monNum],
+            day: day,
+            week: weekObj.en,
+            week_abbr: weekObj.abbr,
+            week_chinese: week_ch,
+            isHoliday: row["是否放假"] === "2",
+            caption: row["備註"] || ""
+            };
+        });
+        }
+        function downloadObjectAsJson(exportObj, exportName){
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportObj,null,2));
+            const dlAnchor = document.createElement('a');
+            dlAnchor.setAttribute("href",     dataStr     );
+            dlAnchor.setAttribute("download", exportName);
+            document.body.appendChild(dlAnchor); // required for firefox
+            dlAnchor.click();
+            dlAnchor.remove();
+        }
+        const index = [2017,2018,2019,2020,2021,2022,2023,2024,2025];
+        index.forEach(element => {
+            fetch(`./origin_data/${element}.json`)
+                .then(r => r.json())
+                .then(data => {
+                    // data 就是你的原始陣列
+                    const newArr = transformEduHolidayArray(data); // 轉換成新格式
+                    console.log(element,newArr);
+                    // downloadObjectAsJson(newArr, `${element}.json`);  // 要轉換時才開
+            });
+            
+        }); 
+    </script>
+</body>
+</html>
